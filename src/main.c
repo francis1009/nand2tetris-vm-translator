@@ -36,8 +36,11 @@ int main(int argc, char **argv) {
 	ParsedLine parsed;
 	char output[80];
 	while (fgets(line, sizeof(line), vm_file)) {
-		snprintf(output, sizeof(output), "%s", line);
-		fprintf(asm_file, "%s", output);
+		if (line[0] == '/' || line[0] == '\n' || line[0] == '\0') {
+			continue;
+		}
+		parsed = parser_parse(line);
+		printf("%d %s %d\n", parsed.type, parsed.segment, parsed.value);
 	}
 
 	fclose(vm_file);

@@ -7,7 +7,6 @@ CPP_FLAGS = -Iinclude
 # Compiler flags
 CFLAGS_DEBUG = -g -O0 -Wall -Wextra -Wpedantic -fsanitize=address,undefined
 CFLAGS_RELEASE = -O2 -DNDEBUG -flto
-LDFLAGS = -lSDL3
 
 # Default vm file to run
 # Usage: make run FILE=BasicTest.vm
@@ -35,11 +34,11 @@ release: $(TARGET_RELEASE)
 # Generic rule to build targets from source files
 $(TARGET_DEBUG): $(SRC)
 	@mkdir -p $(BUILD_DIR)
-	$(CC) $(CPP_FLAGS) $(CFLAGS_DEBUG) $^ -o $@ $(LDFLAGS)
+	$(CC) $(CPP_FLAGS) $(CFLAGS_DEBUG) $^ -o $@
 
 $(TARGET_RELEASE): $(SRC)
 	@mkdir -p $(BUILD_DIR)
-	$(CC) $(CPP_FLAGS) $(CFLAGS_RELEASE) $^ -o $@ $(LDFLAGS)
+	$(CC) $(CPP_FLAGS) $(CFLAGS_RELEASE) $^ -o $@
 
 # Clean rule
 clean:
@@ -47,7 +46,7 @@ clean:
 	rm -rf $(BUILD_DIR)
 
 # Run rules
-run: run-release
+run: run-debug
 
 run-debug: debug
 	@echo "--- Running Debug Build with FILE: $(FILE) ---"
