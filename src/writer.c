@@ -13,9 +13,11 @@ void writer_save_filename(char *filename) {
 	id = 0;
 }
 
+void writer_init(FILE *asm_file) {
+}
+
 void writer_arithmetic(FILE *asm_file, char *arithmetic) {
 	char output[256];
-	output[0] = '\0';
 	if (strcmp(arithmetic, "add") == 0) {
 		snprintf(output, sizeof(output), "@SP\nAM=M-1\nD=M\nA=A-1\nM=D+M\n");
 	} else if (strcmp(arithmetic, "sub") == 0) {
@@ -54,7 +56,6 @@ void writer_arithmetic(FILE *asm_file, char *arithmetic) {
 void writer_push_pop(FILE *asm_file, CommandType type, char *segment,
 										 int value) {
 	char output[256];
-	output[0] = '\0';
 	if (type == C_PUSH) {
 		if (strcmp(segment, "constant") == 0) {
 			snprintf(output, sizeof(output), "@%d\nD=A\n@SP\nM=M+1\nA=M-1\nM=D\n",
@@ -115,4 +116,34 @@ void writer_push_pop(FILE *asm_file, CommandType type, char *segment,
 	}
 
 	fprintf(asm_file, "%s", output);
+}
+
+void writer_label(FILE *asm_file, char *segment) {
+	char output[256];
+	snprintf(output, sizeof(output), "(%s)\n", segment);
+
+	fprintf(asm_file, "%s", output);
+}
+
+void writer_goto(FILE *asm_file, char *segment) {
+	char output[256];
+	snprintf(output, sizeof(output), "@%s\n0;JMP\n", segment);
+
+	fprintf(asm_file, "%s", output);
+}
+
+void writer_if(FILE *asm_file, char *segment) {
+	char output[256];
+	snprintf(output, sizeof(output), "@SP\nAM=M-1\nD=M\n@%s\nD;JGT\n", segment);
+
+	fprintf(asm_file, "%s", output);
+}
+
+void writer_function(FILE *asm_file, char *segment, int num_vars) {
+}
+
+void writer_call(FILE *asm_file, char *segment, int num_args) {
+}
+
+void writer_return(FILE *asm_file) {
 }

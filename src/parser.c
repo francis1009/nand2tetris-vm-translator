@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-void trim_whitespace(char *line) {
+void parser_trim_whitespace(char *line) {
 	if (!line || !*line) {
 		return;
 	}
@@ -23,7 +23,6 @@ void trim_whitespace(char *line) {
 ParsedLine parser_parse(char *line) {
 	ParsedLine parsed;
 
-	trim_whitespace(line);
 	char *token = strtok(line, " \n");
 	if (strcmp(token, "push") == 0) {
 		parsed.type = C_PUSH;

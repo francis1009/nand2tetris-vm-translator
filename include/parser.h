@@ -19,6 +19,7 @@ typedef struct {
 	int value;
 } ParsedLine;
 
+void parser_trim_whitespace(char *line);
 ParsedLine parser_parse(char *line);
 
 #endif

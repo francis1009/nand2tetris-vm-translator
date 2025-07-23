@@ -40,6 +40,7 @@ int main(int argc, char **argv) {
 	ParsedLine parsed;
 	char output[80];
 	while (fgets(line, sizeof(line), vm_file)) {
+		parser_trim_whitespace(line);
 		if (line[0] == '/' || line[0] == '\n' || line[0] == '\0') {
 			continue;
 		}
@@ -55,14 +56,18 @@ int main(int argc, char **argv) {
 							 parsed.value);
 			fprintf(asm_file, "%s", output);
 			writer_push_pop(asm_file, parsed.type, parsed.segment, parsed.value);
-		} else if (parsed.type == C_LABEL || parsed.type == C_IF ||
-							 parsed.type == C_GOTO) {
-			snprintf(output, sizeof(output), "// %s %s \n",
-							 parsed.type == C_LABEL ? "label"
-							 : parsed.type == C_IF	? "if-goto"
-																			: "goto",
-							 parsed.segment);
+		} else if (parsed.type == C_LABEL) {
+			snprintf(output, sizeof(output), "// label %s\n", parsed.segment);
 			fprintf(asm_file, "%s", output);
+			writer_label(asm_file, parsed.segment);
+		} else if (parsed.type == C_GOTO) {
+			snprintf(output, sizeof(output), "// goto %s\n", parsed.segment);
+			fprintf(asm_file, "%s", output);
+			writer_goto(asm_file, parsed.segment);
+		} else if (parsed.type == C_IF) {
+			snprintf(output, sizeof(output), "// if-goto %s\n", parsed.segment);
+			fprintf(asm_file, "%s", output);
+			writer_if(asm_file, parsed.segment);
 		}
 	}
 
