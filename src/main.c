@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
 
 	char asm_filename[256];
 	snprintf(asm_filename, sizeof(asm_filename), "%.*s.asm",
-					 (int) (strlen(vm_filename) - 3), vm_filename);
+					 (int) strlen(vm_filename) - 3, vm_filename);
 	FILE *asm_file = fopen(asm_filename, "w");
 
 	char line[256];
@@ -39,8 +39,19 @@ int main(int argc, char **argv) {
 		if (line[0] == '/' || line[0] == '\n' || line[0] == '\0') {
 			continue;
 		}
+
 		parsed = parser_parse(line);
-		printf("%d %s %d\n", parsed.type, parsed.segment, parsed.value);
+		if (parsed.type == C_ARITHMETIC) {
+			snprintf(output, sizeof(output), "// %s\n", parsed.segment);
+			fprintf(asm_file, "%s", output);
+			writer_arithmetic(asm_file, parsed.segment);
+		} else if (parsed.type == C_PUSH || parsed.type == C_POP) {
+			snprintf(output, sizeof(output), "// %s %s %d\n",
+							 parsed.type == C_PUSH ? "push" : "pop", parsed.segment,
+							 parsed.value);
+			fprintf(asm_file, "%s", output);
+			writer_push_pop(asm_file, parsed.type, parsed.segment, parsed.value);
+		}
 	}
 
 	fclose(vm_file);
