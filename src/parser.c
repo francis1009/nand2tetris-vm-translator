@@ -6,9 +6,6 @@
 
 ParsedLine parser_parse(char *line) {
 	ParsedLine parsed;
-	parsed.type = C_RETURN;
-	parsed.segment[0] = '\0';
-	parsed.value = 0;
 
 	char *token = strtok(line, " \n");
 	if (strcmp(token, "push") == 0) {
@@ -18,6 +15,7 @@ ParsedLine parser_parse(char *line) {
 	} else {
 		parsed.type = C_ARITHMETIC;
 		snprintf(parsed.segment, sizeof(parsed.segment), "%s", token);
+		parsed.value = 0;
 		return parsed;
 	}
 

@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include "parser.h"
 
+void writer_save_filename(char *filename);
 void writer_arithmetic(FILE *asm_file, char *arithmetic);
 void writer_push_pop(FILE *asm_file, CommandType type, char *segment, int value);
 

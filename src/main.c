@@ -32,6 +32,10 @@ int main(int argc, char **argv) {
 					 (int) strlen(vm_filename) - 3, vm_filename);
 	FILE *asm_file = fopen(asm_filename, "w");
 
+	char *filename = asm_filename;
+	filename[strlen(asm_filename) - 4] = '\0';
+	writer_save_filename(filename);
+
 	char line[256];
 	ParsedLine parsed;
 	char output[80];
