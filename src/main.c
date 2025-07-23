@@ -55,6 +55,14 @@ int main(int argc, char **argv) {
 							 parsed.value);
 			fprintf(asm_file, "%s", output);
 			writer_push_pop(asm_file, parsed.type, parsed.segment, parsed.value);
+		} else if (parsed.type == C_LABEL || parsed.type == C_IF ||
+							 parsed.type == C_GOTO) {
+			snprintf(output, sizeof(output), "// %s %s \n",
+							 parsed.type == C_LABEL ? "label"
+							 : parsed.type == C_IF	? "if-goto"
+																			: "goto",
+							 parsed.segment);
+			fprintf(asm_file, "%s", output);
 		}
 	}
 
