@@ -5,53 +5,47 @@
 
 #include "parser.h"
 
-int id = 0;
+int id;
 char *static_name;
 
 void writer_save_filename(char *filename) {
 	static_name = filename;
+	id = 0;
 }
 
 void writer_arithmetic(FILE *asm_file, char *arithmetic) {
 	char output[256];
 	output[0] = '\0';
 	if (strcmp(arithmetic, "add") == 0) {
-		snprintf(output, sizeof(output),
-						 "@SP\nAM=M-1\nD=M\n@SP\nAM=M-1\nM=D+M\n@SP\nM=M+1\n");
+		snprintf(output, sizeof(output), "@SP\nAM=M-1\nD=M\nA=A-1\nM=D+M\n");
 	} else if (strcmp(arithmetic, "sub") == 0) {
-		snprintf(output, sizeof(output),
-						 "@SP\nAM=M-1\nD=M\n@SP\nAM=M-1\nM=M-D\n@SP\nM=M+1\n");
+		snprintf(output, sizeof(output), "@SP\nAM=M-1\nD=M\nA=A-1\nM=M-D\n");
 	} else if (strcmp(arithmetic, "neg") == 0) {
-		snprintf(output, sizeof(output), "@SP\nAM=M-1\nM=-M\n@SP\nM=M+1\n");
+		snprintf(output, sizeof(output), "@SP\nA=M-1\nM=-M\n");
 	} else if (strcmp(arithmetic, "eq") == 0) {
 		snprintf(output, sizeof(output),
-						 "@SP\nAM=M-1\nD=M\n@SP\nAM=M-1\nD=M-D\n@TRUE_%d\nD;JEQ\nD="
-						 "0\n@SP\nA=M\nM=D\n@CONTINUE_%d\n0;JMP\n(TRUE_%d)\nD=-1\n@SP\nA="
-						 "M\nM=D\n(CONTINUE_%d)\n@SP\nM=M+1\n",
-						 id, id, id, id);
+						 "@SP\nAM=M-1\nD=M\n@SP\nA=M-1\nD=M-D\nM=-1\n@CONTINUE_%d\nD;"
+						 "JEQ\n@SP\nA=M-1\nM=0\n(CONTINUE_%d)\n",
+						 id, id);
 		id++;
 	} else if (strcmp(arithmetic, "gt") == 0) {
 		snprintf(output, sizeof(output),
-						 "@SP\nAM=M-1\nD=M\n@SP\nAM=M-1\nD=M-D\n@TRUE_%d\nD;JGT\nD="
-						 "0\n@SP\nA=M\nM=D\n@CONTINUE_%d\n0;JMP\n(TRUE_%d)\nD=-1\n@SP\nA="
-						 "M\nM=D\n(CONTINUE_%d)\n@SP\nM=M+1\n",
-						 id, id, id, id);
+						 "@SP\nAM=M-1\nD=M\n@SP\nA=M-1\nD=M-D\nM=-1\n@CONTINUE_%d\nD;"
+						 "JGT\n@SP\nA=M-1\nM=0\n(CONTINUE_%d)\n",
+						 id, id);
 		id++;
 	} else if (strcmp(arithmetic, "lt") == 0) {
 		snprintf(output, sizeof(output),
-						 "@SP\nAM=M-1\nD=M\n@SP\nAM=M-1\nD=M-D\n@TRUE_%d\nD;JLT\nD="
-						 "0\n@SP\nA=M\nM=D\n@CONTINUE_%d\n0;JMP\n(TRUE_%d)\nD=-1\n@SP\nA="
-						 "M\nM=D\n(CONTINUE_%d)\n@SP\nM=M+1\n",
-						 id, id, id, id);
+						 "@SP\nAM=M-1\nD=M\n@SP\nA=M-1\nD=M-D\nM=-1\n@CONTINUE_%d\nD;"
+						 "JLT\n@SP\nA=M-1\nM=0\n(CONTINUE_%d)\n",
+						 id, id);
 		id++;
 	} else if (strcmp(arithmetic, "and") == 0) {
-		snprintf(output, sizeof(output),
-						 "@SP\nAM=M-1\nD=M\n@SP\nAM=M-1\nM=D&M\n@SP\nM=M+1\n");
+		snprintf(output, sizeof(output), "@SP\nAM=M-1\nD=M\nA=A-1\nM=D&M\n");
 	} else if (strcmp(arithmetic, "or") == 0) {
-		snprintf(output, sizeof(output),
-						 "@SP\nAM=M-1\nD=M\n@SP\nAM=M-1\nM=D|M\n@SP\nM=M+1\n");
+		snprintf(output, sizeof(output), "@SP\nAM=M-1\nD=M\nA=A-1\nM=D|M\n");
 	} else {
-		snprintf(output, sizeof(output), "@SP\nAM=M-1\nM=!M\n@SP\nM=M+1\n");
+		snprintf(output, sizeof(output), "@SP\nA=M-1\nM=!M\n");
 	}
 
 	fprintf(asm_file, "%s", output);
@@ -63,38 +57,29 @@ void writer_push_pop(FILE *asm_file, CommandType type, char *segment,
 	output[0] = '\0';
 	if (type == C_PUSH) {
 		if (strcmp(segment, "constant") == 0) {
-			snprintf(output, sizeof(output), "@%d\nD=A\n@SP\nA=M\nM=D\n@SP\nM=M+1\n",
+			snprintf(output, sizeof(output), "@%d\nD=A\n@SP\nM=M+1\nA=M-1\nM=D\n",
 							 value);
 		} else if (strcmp(segment, "local") == 0) {
 			snprintf(output, sizeof(output),
-							 "@%d\nD=A\n@LCL\nA=D+M\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n",
-							 value);
+							 "@%d\nD=A\n@LCL\nA=D+M\nD=M\n@SP\nM=M+1\nA=M-1\nM=D\n", value);
 		} else if (strcmp(segment, "argument") == 0) {
 			snprintf(output, sizeof(output),
-							 "@%d\nD=A\n@ARG\nA=D+M\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n",
-							 value);
+							 "@%d\nD=A\n@ARG\nA=D+M\nD=M\n@SP\nM=M+1\nA=M-1\nM=D\n", value);
 		} else if (strcmp(segment, "this") == 0) {
 			snprintf(output, sizeof(output),
-							 "@%d\nD=A\n@THIS\nA=D+M\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n",
-							 value);
+							 "@%d\nD=A\n@THIS\nA=D+M\nD=M\n@SP\nM=M+1\nA=M-1\nM=D\n", value);
 		} else if (strcmp(segment, "that") == 0) {
 			snprintf(output, sizeof(output),
-							 "@%d\nD=A\n@THAT\nA=D+M\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n",
-							 value);
+							 "@%d\nD=A\n@THAT\nA=D+M\nD=M\n@SP\nM=M+1\nA=M-1\nM=D\n", value);
 		} else if (strcmp(segment, "static") == 0) {
-			snprintf(output, sizeof(output),
-							 "@%s.%d\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n", static_name, value);
+			snprintf(output, sizeof(output), "@%s.%d\nD=M\n@SP\nM=M+1\nA=M-1\nM=D\n",
+							 static_name, value);
 		} else if (strcmp(segment, "temp") == 0) {
-			snprintf(output, sizeof(output),
-							 "@5\nD=A\n@%d\nA=D+A\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n", value);
+			snprintf(output, sizeof(output), "@R%d\nD=M\n@SP\nM=M+1\nA=M-1\nM=D\n",
+							 5 + value);
 		} else {
-			if (value == 0) {
-				snprintf(output, sizeof(output),
-								 "@THIS\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n");
-			} else {
-				snprintf(output, sizeof(output),
-								 "@THAT\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n");
-			}
+			snprintf(output, sizeof(output), "@%s\nD=M\n@SP\nM=M+1\nA=M-1\nM=D\n",
+							 value == 0 ? "THIS" : "THAT");
 		}
 	} else {
 		if (strcmp(segment, "local") == 0) {
@@ -121,16 +106,11 @@ void writer_push_pop(FILE *asm_file, CommandType type, char *segment,
 			snprintf(output, sizeof(output), "@SP\nAM=M-1\nD=M\n@%s.%d\nM=D\n",
 							 static_name, value);
 		} else if (strcmp(segment, "temp") == 0) {
-			snprintf(output, sizeof(output),
-							 "@5\nD=A\n@%d\nD=D+A\n@R13\nM=D\n@SP\nAM=M-1\nD=M\n@"
-							 "R13\nA=M\nM=D\n",
-							 value);
+			snprintf(output, sizeof(output), "@SP\nAM=M-1\nD=M\n@R%d\nM=D\n",
+							 5 + value);
 		} else {
-			if (value == 0) {
-				snprintf(output, sizeof(output), "@SP\nAM=M-1\nD=M\n@THIS\nM=D\n");
-			} else {
-				snprintf(output, sizeof(output), "@SP\nAM=M-1\nD=M\n@THAT\nM=D\n");
-			}
+			snprintf(output, sizeof(output), "@SP\nAM=M-1\nD=M\n@%s\nM=D\n",
+							 value == 0 ? "THIS" : "THAT");
 		}
 	}
 
