@@ -157,7 +157,7 @@ void writer_call(FILE *asm_file, char *segment, int num_args) {
 
 void writer_return(FILE *asm_file) {
 	char output[256];
-	snprintf(output, sizeof(output), "@LCL\nD=M\n@5\nD=D-A\n@R13\nM=D\n@SP\nAM=M-1\nD=M\n@ARG\nA=M\nM=D\nD=A\n@SP\nM=D+1\n@R13\nD=M\n@LCL\nMD=D+1\n@ARG\nMD=D+1\n@THIS\nMD=D+1\n@THAT\nMD=D+1\n@%s_RETURN_ADDR\n0;JMP\n", static_name);
+	snprintf(output, sizeof(output), "@LCL\nD=M\n@5\nD=D-A\n@R13\nM=D\n@SP\nAM=M-1\nD=M\n@ARG\nA=M\nM=D\nD=A\n@SP\nM=D+1\n@R13\nD=M\n@LCL\nMD=D+1\n@ARG\nMD=D+1\n@THIS\nMD=D+1\n@THAT\nMD=D+1\n@R13\nA=M\n0;JMP\n");
 
 	fprintf(asm_file, "%s", output);
 }
