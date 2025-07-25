@@ -15,7 +15,7 @@ typedef enum {
 
 typedef struct {
 	CommandType type;
-	char segment[16];
+	char segment[80];
 	int value;
 } ParsedLine;
 

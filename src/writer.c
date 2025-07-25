@@ -123,7 +123,7 @@ void writer_if(FILE *asm_file, char *segment) {
 }
 
 void writer_function(FILE *asm_file, char *segment, int num_vars) {
-	fprintf(asm_file, "(%s)", segment);
+	fprintf(asm_file, "(%s)\n", segment);
 	for (int i = 0; i < num_vars; i++) {
 		fprintf(asm_file, "@SP\nM=M+1\nA=M-1\nM=0\n");
 	}
@@ -140,7 +140,8 @@ void writer_call(FILE *asm_file, char *segment, int num_args) {
 
 void writer_return(FILE *asm_file) {
 	fprintf(asm_file,
-					"@LCL\nD=M\n@5\nD=D-A\n@R13\nM=D\n@SP\nAM=M-1\nD=M\n@ARG\nA=M\nM="
-					"D\nD=A\n@SP\nM=D+1\n@R13\nD=M\n@LCL\nMD=D+1\n@ARG\nMD=D+1\n@"
-					"THIS\nMD=D+1\n@THAT\nMD=D+1\n@R13\nA=M\n0;JMP\n");
+					"@LCL\nD=M\n@R13\nM=D\n@5\nD=D-A\n@R14\nM=D\n@SP\nAM=M-1\nD=M\n@"
+					"ARG\nA=M\nM=D\nD=A\n@SP\nM=D+1\n@R13\nAM=M-1\nD=M\n@THAT\nM=D\n@"
+					"R13\nAM=M-1\nD=M\n@THIS\nM=D\n@R13\nAM=M-1\nD=M\n@ARG\nM=D\n@"
+					"R13\nAM=M-1\nD=M\n@LCL\nM=D\n@R14\nA=M\n0;JMP\n");
 }
