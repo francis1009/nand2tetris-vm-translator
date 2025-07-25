@@ -14,6 +14,8 @@ void writer_save_filename(char *filename) {
 }
 
 void writer_init(FILE *asm_file) {
+	fprintf(asm_file, "@256\nD=A\n@SP\nM=D\n");
+	writer_call(asm_file, "Sys.init", 0);
 }
 
 void writer_arithmetic(FILE *asm_file, char *arithmetic) {
@@ -140,10 +142,22 @@ void writer_if(FILE *asm_file, char *segment) {
 }
 
 void writer_function(FILE *asm_file, char *segment, int num_vars) {
+	fprintf(asm_file, "(%s)", segment);
+	for (int i = 0; i < num_vars; i++) {
+		fprintf(asm_file, "@SP\nM=M+1\nA=M-1\nM=0\n");
+	}
 }
 
 void writer_call(FILE *asm_file, char *segment, int num_args) {
+	char output[256];
+	snprintf(output, sizeof(output), "@%s_RETURN_ADDR\nD=A\n@SP\nM=M+1\nA=M-1\nM=D\n@LCL\nD=M\n@SP\nM=M+1\nA=M-1\nM=D\n@ARG\nD=M\n@SP\nM=M+1\nA=M-1\nM=D\n@THIS\nD=M\n@SP\nM=M+1\nA=M-1\nM=D\n@THAT\nD=M\n@SP\nM=M+1\nA=M-1\nM=D\n@SP\nD=M\n@LCL\nM=D\n@%d\nD=D-A\n@ARG\nM=D\n@%s\n0;JMP\n(%s_RETURN_ADDR)\n", segment, 5 + num_args, segment, segment);
+
+	fprintf(asm_file, "%s", output);
 }
 
 void writer_return(FILE *asm_file) {
+	char output[256];
+	snprintf(output, sizeof(output), "@LCL\nD=M\n@5\nD=D-A\n@R13\nM=D\n@SP\nAM=M-1\nD=M\n@ARG\nA=M\nM=D\nD=A\n@SP\nM=D+1\n@R13\nD=M\n@LCL\nMD=D+1\n@ARG\nMD=D+1\n@THIS\nMD=D+1\n@THAT\nMD=D+1\n@%s_RETURN_ADDR\n0;JMP\n", static_name);
+
+	fprintf(asm_file, "%s", output);
 }

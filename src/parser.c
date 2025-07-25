@@ -34,6 +34,12 @@ ParsedLine parser_parse(char *line) {
 		parsed.type = C_IF;
 	} else if (strcmp(token, "goto") == 0) {
 		parsed.type = C_GOTO;
+	} else if (strcmp(token, "function") == 0) {
+		parsed.type = C_FUNCTION;
+	} else if (strcmp(token, "call") == 0) {
+		parsed.type = C_CALL;
+	}  else if (strcmp(token, "return") == 0) {
+		parsed.type = C_RETURN;
 	} else {
 		parsed.type = C_ARITHMETIC;
 		snprintf(parsed.segment, sizeof(parsed.segment), "%s", token);
