@@ -7,14 +7,32 @@
 
 int id;
 char *static_name;
+char *current_function;
+int function_call_count;
+int global_call_count;
+
+const char* get_scoped_label(char *label) {
+	static char buffer[256];
+
+	if (current_function) {
+		snprintf(buffer, sizeof(buffer), "%s$%s", current_function, label);
+	} else {
+		snprintf(buffer, sizeof(buffer), "%s", label);
+	}
+
+	return buffer;
+}
 
 void writer_save_filename(char *filename) {
 	static_name = filename;
 	id = 0;
+	current_function = NULL;
+	function_call_count = 0;
 }
 
 void writer_init(FILE *asm_file) {
 	fprintf(asm_file, "@256\nD=A\n@SP\nM=D\n");
+	global_call_count = 0;
 	writer_call(asm_file, "Sys.init", 0);
 }
 
@@ -111,18 +129,21 @@ void writer_push_pop(FILE *asm_file, CommandType type, char *segment,
 }
 
 void writer_label(FILE *asm_file, char *segment) {
-	fprintf(asm_file, "(%s)\n", segment);
+	fprintf(asm_file, "(%s)\n", get_scoped_label(segment));
 }
 
 void writer_goto(FILE *asm_file, char *segment) {
-	fprintf(asm_file, "@%s\n0;JMP\n", segment);
+	fprintf(asm_file, "@%s\n0;JMP\n", get_scoped_label(segment));
 }
 
 void writer_if(FILE *asm_file, char *segment) {
-	fprintf(asm_file, "@SP\nAM=M-1\nD=M\n@%s\nD;JGT\n", segment);
+	fprintf(asm_file, "@SP\nAM=M-1\nD=M\n@%s\nD;JGT\n", get_scoped_label(segment));
 }
 
 void writer_function(FILE *asm_file, char *segment, int num_vars) {
+	current_function = segment;
+	function_call_count = 0;
+
 	fprintf(asm_file, "(%s)\n", segment);
 	for (int i = 0; i < num_vars; i++) {
 		fprintf(asm_file, "@SP\nM=M+1\nA=M-1\nM=0\n");
@@ -130,12 +151,17 @@ void writer_function(FILE *asm_file, char *segment, int num_vars) {
 }
 
 void writer_call(FILE *asm_file, char *segment, int num_args) {
+	char return_label[256];
+	
+	if (current_function) {
+		snprintf(return_label, sizeof(return_label), "%s$ret.%d", current_function, function_call_count++);
+	} else {
+		snprintf(return_label, sizeof(return_label), "GLOBAL_RETURN_%d", global_call_count++);
+	}
+
 	fprintf(asm_file,
-					"@%s_RETURN_ADDR\nD=A\n@SP\nM=M+1\nA=M-1\nM=D\n@LCL\nD=M\n@SP\nM=M+"
-					"1\nA=M-1\nM=D\n@ARG\nD=M\n@SP\nM=M+1\nA=M-1\nM=D\n@THIS\nD=M\n@"
-					"SP\nM=M+1\nA=M-1\nM=D\n@THAT\nD=M\n@SP\nM=M+1\nA=M-1\nM=D\n@SP\nD="
-					"M\n@LCL\nM=D\n@%d\nD=D-A\n@ARG\nM=D\n@%s\n0;JMP\n(%s_RETURN_ADDR)\n",
-					segment, 5 + num_args, segment, segment);
+					"@%s\nD=A\n@SP\nM=M+1\nA=M-1\nM=D\n@LCL\nD=M\n@SP\nM=M+1\nA=M-1\nM=D\n@ARG\nD=M\n@SP\nM=M+1\nA=M-1\nM=D\n@THIS\nD=M\n@SP\nM=M+1\nA=M-1\nM=D\n@THAT\nD=M\n@SP\nM=M+1\nA=M-1\nM=D\n@SP\nD=M\n@LCL\nM=D\n@%d\nD=D-A\n@ARG\nM=D\n@%s\n0;JMP\n(%s)\n",
+					return_label, 5 + num_args, segment, return_label);
 }
 
 void writer_return(FILE *asm_file) {
