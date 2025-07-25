@@ -5,34 +5,36 @@
 
 #include "parser.h"
 
-int id;
+int id = 0;
+int global_call_count = 0;
 char *static_name;
 char *current_function;
-int function_call_count;
-int global_call_count;
 
 const char *get_scoped_label(char *label) {
 	static char buffer[256];
-
-	if (current_function) {
+	if (current_function && label) {
 		snprintf(buffer, sizeof(buffer), "%s$%s", current_function, label);
-	} else {
+	} else if (label) {
 		snprintf(buffer, sizeof(buffer), "%s", label);
+	} else {
+		return "";
 	}
 
 	return buffer;
 }
 
 void writer_save_filename(char *filename) {
+	if (!filename) {
+		return;
+	}
+
 	static_name = filename;
 	id = 0;
 	current_function = NULL;
-	function_call_count = 0;
 }
 
 void writer_init(FILE *asm_file) {
 	fprintf(asm_file, "@256\nD=A\n@SP\nM=D\n");
-	global_call_count = 0;
 	writer_call(asm_file, "Sys.init", 0);
 }
 
@@ -143,7 +145,6 @@ void writer_if(FILE *asm_file, char *segment) {
 
 void writer_function(FILE *asm_file, char *segment, int num_vars) {
 	current_function = segment;
-	function_call_count = 0;
 
 	fprintf(asm_file, "(%s)\n", segment);
 	for (int i = 0; i < num_vars; i++) {
@@ -156,11 +157,12 @@ void writer_call(FILE *asm_file, char *segment, int num_args) {
 
 	if (current_function) {
 		snprintf(return_label, sizeof(return_label), "%s$ret.%d", current_function,
-						 function_call_count++);
+						 global_call_count);
 	} else {
 		snprintf(return_label, sizeof(return_label), "GLOBAL_RETURN_%d",
-						 global_call_count++);
+						 global_call_count);
 	}
+	global_call_count++;
 
 	fprintf(asm_file, "@%s\nD=A\n@SP\nM=M+1\nA=M-1\nM=D\n", return_label);
 

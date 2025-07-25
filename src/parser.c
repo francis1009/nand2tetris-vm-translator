@@ -5,9 +5,16 @@
 #include <stdlib.h>
 #include <string.h>
 
-void parser_trim_whitespace(char *line) {
+void parser_trim_whitespace_comment(char *line) {
 	if (!line || !*line) {
 		return;
+	}
+
+	line[strcspn(line, "\r\n")] = '\0';
+
+	char *comment = strchr(line, '/');
+	if (comment) {
+		*comment = '\0';
 	}
 
 	char *start = line;
@@ -38,7 +45,7 @@ ParsedLine parser_parse(char *line) {
 		parsed.type = C_FUNCTION;
 	} else if (strcmp(token, "call") == 0) {
 		parsed.type = C_CALL;
-	}  else if (strcmp(token, "return") == 0) {
+	} else if (strcmp(token, "return") == 0) {
 		parsed.type = C_RETURN;
 	} else {
 		parsed.type = C_ARITHMETIC;
