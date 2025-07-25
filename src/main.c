@@ -38,7 +38,6 @@ int main(int argc, char **argv) {
 
 	char line[256];
 	ParsedLine parsed;
-	char output[80];
 	while (fgets(line, sizeof(line), vm_file)) {
 		parser_trim_whitespace(line);
 		if (line[0] == '/' || line[0] == '\n' || line[0] == '\0') {
@@ -47,27 +46,30 @@ int main(int argc, char **argv) {
 
 		parsed = parser_parse(line);
 		if (parsed.type == C_ARITHMETIC) {
-			snprintf(output, sizeof(output), "// %s\n", parsed.segment);
-			fprintf(asm_file, "%s", output);
+			fprintf(asm_file, "// %s\n", parsed.segment);
 			writer_arithmetic(asm_file, parsed.segment);
 		} else if (parsed.type == C_PUSH || parsed.type == C_POP) {
-			snprintf(output, sizeof(output), "// %s %s %d\n",
-							 parsed.type == C_PUSH ? "push" : "pop", parsed.segment,
-							 parsed.value);
-			fprintf(asm_file, "%s", output);
+			fprintf(asm_file, "// %s %s %d\n", parsed.type == C_PUSH ? "push" : "pop",
+							parsed.segment, parsed.value);
 			writer_push_pop(asm_file, parsed.type, parsed.segment, parsed.value);
 		} else if (parsed.type == C_LABEL) {
-			snprintf(output, sizeof(output), "// label %s\n", parsed.segment);
-			fprintf(asm_file, "%s", output);
+			fprintf(asm_file, "// label %s\n", parsed.segment);
 			writer_label(asm_file, parsed.segment);
 		} else if (parsed.type == C_GOTO) {
-			snprintf(output, sizeof(output), "// goto %s\n", parsed.segment);
-			fprintf(asm_file, "%s", output);
+			fprintf(asm_file, "// goto %s\n", parsed.segment);
 			writer_goto(asm_file, parsed.segment);
 		} else if (parsed.type == C_IF) {
-			snprintf(output, sizeof(output), "// if-goto %s\n", parsed.segment);
-			fprintf(asm_file, "%s", output);
+			fprintf(asm_file, "// if-goto %s\n", parsed.segment);
 			writer_if(asm_file, parsed.segment);
+		} else if (parsed.type == C_FUNCTION) {
+			fprintf(asm_file, "// function %s %d\n", parsed.segment, parsed.value);
+			writer_function(asm_file, parsed.segment, parsed.value);
+		} else if (parsed.type == C_CALL) {
+			fprintf(asm_file, "// call %s %d\n", parsed.segment, parsed.value);
+			writer_call(asm_file, parsed.segment, parsed.value);
+		} else if (parsed.type == C_RETURN) {
+			fprintf(asm_file, "// return\n");
+			writer_return(asm_file);
 		}
 	}
 
